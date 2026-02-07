@@ -81,7 +81,20 @@ st.markdown("""
     }
 
     /* Card row spacing */
-    [data-testid="stHorizontalBlock"] { gap: 8px !important; }
+    /* Card row – equal height columns */
+    [data-testid="stHorizontalBlock"] {
+        gap: 8px !important;
+        align-items: stretch !important;
+    }
+    [data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    [data-testid="stHorizontalBlock"] > div[data-testid="column"] > div {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
 
     /* Labels & text */
     .stSelectbox label, .stDateInput label { color: #FFFFFF; }

@@ -28,7 +28,7 @@ def _card_html(label: str, body: str) -> str:
     """Minimal card wrapper. Keep body HTML as simple as possible."""
     return (
         f'<div style="background:{CARD_BG};padding:16px 20px;border-radius:8px;'
-        f'border:1px solid {CARD_BORDER};box-sizing:border-box;">'
+        f'border:1px solid {CARD_BORDER};box-sizing:border-box;height:100%;">'
         f'<div style="color:{LABEL_COLOR};font-size:12px;margin-bottom:8px;font-weight:500;">{label}</div>'
         f'{body}'
         f'</div>'
