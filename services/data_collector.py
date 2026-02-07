@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from api.client import TopstepXClient
 from database.schema import init_database
 from database.repository import TradeRepository
-from config.fees import get_fee_per_round_turn
+from config.fees import get_fee_per_round_turn, get_point_value
 
 
 class DataCollector:
@@ -137,14 +137,17 @@ class DataCollector:
         # Track positions: {contract: {'side': str, 'entries': [{'price', 'size', 'timestamp'}]}}
         positions = defaultdict(lambda: {'side': None, 'entries': []})
         
-        sorted_orders = sorted(orders, key=lambda x: x.get('updateTimestamp', x.get('creationTimestamp', '')))
+        # Sort by execution time: use updateTimestamp (fill time for filled orders),
+        # falling back to creationTimestamp. Use `or` to handle None values properly
+        # (dict.get() only uses default when key is absent, not when value is None)
+        sorted_orders = sorted(orders, key=lambda x: x.get('updateTimestamp') or x.get('creationTimestamp') or '')
         
         for order in sorted_orders:
             contract = order.get('contractId', '')
             order_side = order.get('side')  # 0=BUY, 1=SELL
             size = order.get('fillVolume', order.get('size', 0))
             price = order.get('filledPrice', order.get('price', 0))
-            timestamp = order.get('updateTimestamp', order.get('creationTimestamp', ''))
+            timestamp = order.get('updateTimestamp') or order.get('creationTimestamp') or ''
             
             trade_side = 'Long' if order_side == 0 else 'Short'
             pos = positions[contract]
@@ -175,17 +178,12 @@ class DataCollector:
                     except:
                         duration = 0
                     
-                    # Calculate P&L
+                    # Calculate P&L with contract point value
+                    point_value = get_point_value(contract)
                     if pos['side'] == 'Long':
-                        pnl = (price - entry['price']) * close_size
+                        pnl = (price - entry['price']) * close_size * point_value
                     else:
-                        pnl = (entry['price'] - price) * close_size
-                    
-                    # Adjust for tick value
-                    if 'MNQ' in contract:
-                        pnl = pnl * 2
-                    elif 'NQ' in contract and 'MNQ' not in contract:
-                        pnl = pnl * 20
+                        pnl = (entry['price'] - price) * close_size * point_value
                     
                     # Calculate fees for LIVE account
                     fee = get_fee_per_round_turn(contract) * close_size
