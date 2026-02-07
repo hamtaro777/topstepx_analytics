@@ -49,21 +49,20 @@ st.markdown("""
         border-bottom: 1px solid #2A2D3E !important;
         background-color: transparent !important;
     }
-    [data-testid="stTab"] {
+    [data-testid="stTab"],
+    [data-testid="stTab"] * {
         background-color: transparent !important;
         color: #8A8D98 !important;
-        padding: 10px 24px !important;
+        -webkit-text-fill-color: #8A8D98 !important;
         font-weight: 500 !important;
         font-size: 14px !important;
     }
-    [data-testid="stTab"] p,
-    [data-testid="stTab"] span,
-    [data-testid="stTab"] div {
-        color: inherit !important;
-        font-size: inherit !important;
+    [data-testid="stTab"][aria-selected="true"],
+    [data-testid="stTab"][aria-selected="true"] * {
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
     }
     [data-testid="stTab"][aria-selected="true"] {
-        color: #FFFFFF !important;
         border-bottom: 2px solid #00C853 !important;
     }
     [data-baseweb="tab-highlight"] {
