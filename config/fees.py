@@ -157,6 +157,8 @@ def extract_base_symbol(symbol: str) -> str:
     Examples:
         'CON.F.US.MNQ.H26' -> 'MNQ'
         'CON.F.US.ENQ.H26' -> 'NQ'  (ENQ = E-mini Nasdaq)
+        'F.US.ENQ' -> 'NQ'          (short symbolId format)
+        'F.US.MNQ' -> 'MNQ'
         'MESZ4' -> 'MES'
         'MNQ DEC24' -> 'MNQ'
         'ESH5' -> 'ES'
@@ -164,16 +166,24 @@ def extract_base_symbol(symbol: str) -> str:
     """
     symbol = symbol.upper().strip()
 
+    # Map exchange symbols to standard symbols
+    symbol_map = {
+        'ENQ': 'NQ',    # E-mini Nasdaq
+        'EMD': 'ES',    # E-mini S&P (alternative)
+    }
+
     # Handle CON.F.US.XXX.XXX format (TopstepX/Rithmic format)
     if symbol.startswith('CON.F.'):
         parts = symbol.split('.')
         if len(parts) >= 4:
             base = parts[3]  # e.g., 'MNQ', 'ENQ', 'MES'
-            # Map exchange symbols to standard symbols
-            symbol_map = {
-                'ENQ': 'NQ',    # E-mini Nasdaq
-                'EMD': 'ES',    # E-mini S&P (alternative)
-            }
+            return symbol_map.get(base, base)
+
+    # Handle F.US.XXX format (short symbolId format)
+    if symbol.startswith('F.US.'):
+        parts = symbol.split('.')
+        if len(parts) >= 3:
+            base = parts[2]  # e.g., 'ENQ', 'MNQ'
             return symbol_map.get(base, base)
 
     # Try to match known symbols (longer first to avoid partial matches)
