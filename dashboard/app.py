@@ -145,8 +145,12 @@ def render_overview_page(trades: list, daily_stats: pd.DataFrame):
             st.markdown("### Day Analysis")
             c1, c2, c3 = st.columns(3)
             c1.metric("Most Active Day", most_active[0], f"{most_active[1]['trade_count']} trades")
-            c2.metric("Most Profitable", most_profitable[0], f"${most_profitable[1]['total_pnl']:,.2f}")
-            c3.metric("Least Profitable", least_profitable[0], f"${least_profitable[1]['total_pnl']:,.2f}")
+            most_pnl = most_profitable[1]['total_pnl']
+            least_pnl = least_profitable[1]['total_pnl']
+            c2.metric("Most Profitable", most_profitable[0],
+                      f"${most_pnl:,.2f}" if most_pnl >= 0 else f"-${abs(most_pnl):,.2f}")
+            c3.metric("Least Profitable", least_profitable[0],
+                      f"${least_pnl:,.2f}" if least_pnl >= 0 else f"-${abs(least_pnl):,.2f}")
     
     with col2:
         render_trade_stats(metrics)
