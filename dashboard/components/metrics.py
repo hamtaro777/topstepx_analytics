@@ -24,66 +24,28 @@ def _format_pnl(value: float) -> str:
     return f"-${abs(value):,.2f}"
 
 
-def _card(label: str, value_html: str, subtitle_html: str = "") -> str:
-    """Base card HTML template matching TopStepX design."""
-    return f"""
-    <div style="
-        background: {CARD_BG};
-        padding: 16px 20px;
-        border-radius: 8px;
-        border: 1px solid {CARD_BORDER};
-        box-sizing: border-box;
-    ">
-        <div style="color: {LABEL_COLOR}; font-size: 12px; margin-bottom: 8px; font-weight: 500;">
-            {label}
-        </div>
-        {value_html}
-        {subtitle_html}
-    </div>
-    """
+def _card_html(label: str, body: str) -> str:
+    """Minimal card wrapper. Keep body HTML as simple as possible."""
+    return (
+        f'<div style="background:{CARD_BG};padding:16px 20px;border-radius:8px;'
+        f'border:1px solid {CARD_BORDER};box-sizing:border-box;">'
+        f'<div style="color:{LABEL_COLOR};font-size:12px;margin-bottom:8px;font-weight:500;">{label}</div>'
+        f'{body}'
+        f'</div>'
+    )
 
 
-def _val(text: str, color: str = VALUE_COLOR, size: str = "28px") -> str:
-    return f'<div style="color: {color}; font-size: {size}; font-weight: 700; line-height: 1.2;">{text}</div>'
+def _big(text: str, color: str = VALUE_COLOR, size: str = "28px") -> str:
+    return f'<div style="color:{color};font-size:{size};font-weight:700;line-height:1.2;">{text}</div>'
 
 
-def _sub(text: str) -> str:
-    return f'<div style="color: {LABEL_COLOR}; font-size: 11px; margin-top: 4px;">{text}</div>'
+def _small(text: str, color: str = LABEL_COLOR) -> str:
+    return f'<div style="color:{color};font-size:11px;margin-top:4px;">{text}</div>'
 
 
-# ── CSS Donut (no SVG – Streamlit safe) ─────────────────────────
-def _css_donut(pct: float, color1: str = GREEN, color2: str = RED, size: int = 48) -> str:
-    """Pure CSS donut chart using conic-gradient. Works in Streamlit."""
-    deg = pct / 100 * 360
-    inner = size - 12
-    return f"""
-    <div style="
-        width: {size}px; height: {size}px; border-radius: 50%;
-        background: conic-gradient({color1} 0deg {deg}deg, {color2} {deg}deg 360deg);
-        display: inline-flex; align-items: center; justify-content: center;
-        flex-shrink: 0;
-    ">
-        <div style="width: {inner}px; height: {inner}px; border-radius: 50%; background: {CARD_BG};"></div>
-    </div>
-    """
-
-
-# ── Avg Win / Avg Loss Bar ──────────────────────────────────────
-def _avg_win_loss_bar(avg_win: float, avg_loss: float) -> str:
-    total = avg_win + avg_loss
-    win_pct = (avg_win / total * 100) if total > 0 else 50
-    return f"""
-    <div style="margin-top: 6px;">
-        <div style="display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #333;">
-            <div style="width: {win_pct}%; background: {GREEN};"></div>
-            <div style="width: {100 - win_pct}%; background: {RED};"></div>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-top: 4px;">
-            <span style="color: {GREEN}; font-size: 11px; font-weight: 600;">${avg_win:,.2f}</span>
-            <span style="color: {RED}; font-size: 11px; font-weight: 600;">-${avg_loss:,.2f}</span>
-        </div>
-    </div>
-    """
+def _render(html: str):
+    """Shorthand for st.markdown with unsafe_allow_html."""
+    st.markdown(html, unsafe_allow_html=True)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -91,47 +53,52 @@ def _avg_win_loss_bar(avg_win: float, avg_loss: float) -> str:
 # ═══════════════════════════════════════════════════════════════
 
 def render_kpi_row(metrics: dict):
-    """Render top 2 rows of KPI cards (3 per row) matching TopStepX."""
+    """Render top 2 rows of KPI cards (3 per row)."""
 
     # ── Row 1 ──
     c1, c2, c3 = st.columns(3)
 
     with c1:
         pnl = metrics['total_pnl']
-        st.markdown(_card(
-            "Total P&L",
-            _val(_format_pnl(pnl), _pnl_color(pnl)),
-        ), unsafe_allow_html=True)
+        _render(_card_html("Total P&L", _big(_format_pnl(pnl), _pnl_color(pnl))))
 
     with c2:
         wr = metrics['win_rate']
-        donut = _css_donut(wr)
         wc = metrics['win_count']
         lc = metrics['loss_count']
-        st.markdown(_card(
-            "Trade Win %",
-            f"""<div style="display: flex; align-items: center; gap: 12px;">
-                {_val(f"{wr:.2f}%")}
-                {donut}
-                <div style="font-size: 11px; line-height: 1.6;">
-                    <span style="color: {GREEN}; font-weight: 600;">{wc}</span>
-                    <span style="color: {LABEL_COLOR};"> W</span><br>
-                    <span style="color: {RED}; font-weight: 600;">{lc}</span>
-                    <span style="color: {LABEL_COLOR};"> L</span>
-                </div>
-            </div>""",
-        ), unsafe_allow_html=True)
+        body = (
+            _big(f"{wr:.2f}%")
+            + f'<div style="margin-top:6px;font-size:12px;">'
+            f'<span style="color:{GREEN};font-weight:600;">{wc}</span>'
+            f'<span style="color:{LABEL_COLOR};"> W</span>'
+            f'<span style="color:{LABEL_COLOR};margin:0 6px;">|</span>'
+            f'<span style="color:{RED};font-weight:600;">{lc}</span>'
+            f'<span style="color:{LABEL_COLOR};"> L</span>'
+            f'</div>'
+        )
+        _render(_card_html("Trade Win %", body))
 
     with c3:
         rr = metrics['rr_ratio']
-        bar = _avg_win_loss_bar(metrics['avg_win'], metrics['avg_loss'])
-        st.markdown(_card(
-            "Avg Win / Avg Loss",
-            _val(f"{rr:.2f}"),
-            bar,
-        ), unsafe_allow_html=True)
+        avg_w = metrics['avg_win']
+        avg_l = metrics['avg_loss']
+        total = avg_w + avg_l
+        win_pct = (avg_w / total * 100) if total > 0 else 50
+        body = (
+            _big(f"{rr:.2f}")
+            + f'<div style="margin-top:6px;">'
+            f'<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:#333;">'
+            f'<div style="width:{win_pct}%;background:{GREEN};"></div>'
+            f'<div style="width:{100-win_pct}%;background:{RED};"></div>'
+            f'</div>'
+            f'<div style="display:flex;justify-content:space-between;margin-top:4px;">'
+            f'<span style="color:{GREEN};font-size:11px;font-weight:600;">${avg_w:,.2f}</span>'
+            f'<span style="color:{RED};font-size:11px;font-weight:600;">-${avg_l:,.2f}</span>'
+            f'</div></div>'
+        )
+        _render(_card_html("Avg Win / Avg Loss", body))
 
-    st.markdown('<div style="height: 8px;"></div>', unsafe_allow_html=True)
+    _render('<div style="height:8px;"></div>')
 
     # ── Row 2 ──
     c4, c5, c6 = st.columns(3)
@@ -139,44 +106,30 @@ def render_kpi_row(metrics: dict):
     with c4:
         dwp = metrics.get('day_win_pct', 0)
         active = metrics.get('active_days', 0)
-        if active > 0:
-            val_text = f"{dwp:.0f}%"
-        else:
-            val_text = "No trades"
-        st.markdown(_card(
-            "Day Win %",
-            _val(val_text),
-        ), unsafe_allow_html=True)
+        val_text = f"{dwp:.0f}%" if active > 0 else "No trades"
+        _render(_card_html("Day Win %", _big(val_text)))
 
     with c5:
         pf = metrics['profit_factor']
         gp = metrics['gross_profit']
         gl = metrics['gross_loss']
-        total_gl = gp + gl
-        pf_pct = (gp / total_gl * 100) if total_gl > 0 else 50
-        donut = _css_donut(pf_pct)
-        st.markdown(_card(
-            "Profit Factor",
-            f"""<div style="display: flex; align-items: center; gap: 12px;">
-                {_val(f"{pf:.2f}")}
-                {donut}
-            </div>""",
-            f"""<div style="display: flex; justify-content: space-around; margin-top: 6px;">
-                <span style="color: {GREEN}; font-size: 10px; font-weight: 600;">${gp:,.2f}</span>
-                <span style="color: {RED}; font-size: 10px; font-weight: 600;">-${gl:,.2f}</span>
-            </div>""",
-        ), unsafe_allow_html=True)
+        body = (
+            _big(f"{pf:.2f}")
+            + f'<div style="margin-top:6px;font-size:11px;">'
+            f'<span style="color:{GREEN};font-weight:600;">${gp:,.2f}</span>'
+            f'<span style="color:{LABEL_COLOR};margin:0 6px;">|</span>'
+            f'<span style="color:{RED};font-weight:600;">-${gl:,.2f}</span>'
+            f'</div>'
+        )
+        _render(_card_html("Profit Factor", body))
 
     with c6:
         bdp = metrics.get('best_day_pct', 0)
-        st.markdown(_card(
-            "Best Day % of Total Profit",
-            _val(f"{bdp:.2f}%"),
-        ), unsafe_allow_html=True)
+        _render(_card_html("Best Day % of Total Profit", _big(f"{bdp:.2f}%")))
 
 
 def render_day_analysis(metrics: dict, day_stats: dict):
-    """Render day analysis row (Most Active / Most Profitable / Least Profitable)."""
+    """Render day analysis row."""
     if not day_stats:
         return
 
@@ -187,79 +140,55 @@ def render_day_analysis(metrics: dict, day_stats: dict):
     c1, c2, c3 = st.columns(3)
 
     with c1:
-        active_days = metrics.get('active_days', 0)
-        total_trades = metrics.get('total_trades', 0)
-        avg_per_day = metrics.get('avg_trades_per_day', 0)
-        st.markdown(_card(
-            "Most Active Day",
-            _val(most_active[0]),
-            f"""<div style="color: {LABEL_COLOR}; font-size: 11px; margin-top: 6px; line-height: 1.6;">
-                {active_days} active days<br>
-                {total_trades} total trades<br>
-                {avg_per_day:.2f} avg trades/day
-            </div>""",
-        ), unsafe_allow_html=True)
+        ad = metrics.get('active_days', 0)
+        tt = metrics.get('total_trades', 0)
+        apd = metrics.get('avg_trades_per_day', 0)
+        body = (
+            _big(most_active[0])
+            + f'<div style="color:{LABEL_COLOR};font-size:11px;margin-top:6px;line-height:1.6;">'
+            f'{ad} active days | {tt} total trades | {apd:.2f} avg/day</div>'
+        )
+        _render(_card_html("Most Active Day", body))
 
     with c2:
         pnl = most_profitable[1]['total_pnl']
-        st.markdown(_card(
-            "Most Profitable Day",
-            f"""<div style="display: flex; justify-content: space-between; align-items: center;">
-                {_val(most_profitable[0])}
-                <span style="color: {_pnl_color(pnl)}; font-size: 20px; font-weight: 700;">{_format_pnl(pnl)}</span>
-            </div>""",
-        ), unsafe_allow_html=True)
+        body = (
+            f'<div style="display:flex;justify-content:space-between;align-items:center;">'
+            + _big(most_profitable[0])
+            + f'<span style="color:{_pnl_color(pnl)};font-size:20px;font-weight:700;">{_format_pnl(pnl)}</span>'
+            f'</div>'
+        )
+        _render(_card_html("Most Profitable Day", body))
 
     with c3:
         pnl = least_profitable[1]['total_pnl']
-        st.markdown(_card(
-            "Least Profitable Day",
-            f"""<div style="display: flex; justify-content: space-between; align-items: center;">
-                {_val(least_profitable[0])}
-                <span style="color: {_pnl_color(pnl)}; font-size: 20px; font-weight: 700;">{_format_pnl(pnl)}</span>
-            </div>""",
-        ), unsafe_allow_html=True)
+        body = (
+            f'<div style="display:flex;justify-content:space-between;align-items:center;">'
+            + _big(least_profitable[0])
+            + f'<span style="color:{_pnl_color(pnl)};font-size:20px;font-weight:700;">{_format_pnl(pnl)}</span>'
+            f'</div>'
+        )
+        _render(_card_html("Least Profitable Day", body))
 
 
 def render_stats_row(metrics: dict):
     """Render Total Trades / Total Lots / Avg Duration row."""
     c1, c2, c3 = st.columns(3)
-
     with c1:
-        st.markdown(_card(
-            "Total Number of Trades",
-            _val(str(metrics['total_trades'])),
-        ), unsafe_allow_html=True)
-
+        _render(_card_html("Total Number of Trades", _big(str(metrics['total_trades']))))
     with c2:
-        st.markdown(_card(
-            "Total Number of Lots Traded",
-            _val(str(metrics.get('total_lots', 0))),
-        ), unsafe_allow_html=True)
-
+        _render(_card_html("Total Number of Lots Traded", _big(str(metrics.get('total_lots', 0)))))
     with c3:
-        dur = format_duration(metrics['avg_duration_seconds'])
-        st.markdown(_card(
-            "Average Trade Duration",
-            _val(dur),
-        ), unsafe_allow_html=True)
+        _render(_card_html("Average Trade Duration", _big(format_duration(metrics['avg_duration_seconds']))))
 
 
 def render_duration_row(metrics: dict):
     """Render Avg Win Duration / Avg Loss Duration row."""
     c1, c2 = st.columns(2)
-
     with c1:
-        st.markdown(_card(
-            "Average Win Duration",
-            _val(format_duration(metrics['avg_win_duration'])),
-        ), unsafe_allow_html=True)
-
+        _render(_card_html("Average Win Duration", _big(format_duration(metrics['avg_win_duration']))))
     with c2:
-        st.markdown(_card(
-            "Average Loss Duration",
-            _val(format_duration(metrics['avg_loss_duration'])),
-        ), unsafe_allow_html=True)
+        _render(_card_html("Average Loss Duration", _big(format_duration(metrics['avg_loss_duration']))))
 
 
 def render_avg_trade_row(metrics: dict):
@@ -267,42 +196,31 @@ def render_avg_trade_row(metrics: dict):
     c1, c2, c3 = st.columns(3)
 
     with c1:
-        avg_w = metrics['avg_win']
-        st.markdown(_card(
-            "Avg Winning Trade",
-            _val(f"${avg_w:,.2f}", GREEN),
-        ), unsafe_allow_html=True)
+        _render(_card_html("Avg Winning Trade", _big(f"${metrics['avg_win']:,.2f}", GREEN)))
 
     with c2:
-        avg_l = metrics['avg_loss']
-        st.markdown(_card(
-            "Avg Losing Trade",
-            _val(f"-${avg_l:,.2f}", RED),
-        ), unsafe_allow_html=True)
+        _render(_card_html("Avg Losing Trade", _big(f"-${metrics['avg_loss']:,.2f}", RED)))
 
     with c3:
-        long_pct = metrics['long_pct']
+        lp = metrics['long_pct']
         total = metrics['total_trades']
-        long_count = int(total * long_pct / 100) if total > 0 else 0
-        short_count = total - long_count
-        donut = _css_donut(long_pct)
-        st.markdown(_card(
-            "Trade Direction %",
-            f"""<div style="display: flex; align-items: center; gap: 12px;">
-                {_val(f"{long_pct:.2f}%")}
-                {donut}
-                <div style="font-size: 11px; line-height: 1.6;">
-                    <span style="color: {GREEN}; font-weight: 600;">{long_count}</span>
-                    <span style="color: {LABEL_COLOR};"> L</span><br>
-                    <span style="color: {RED}; font-weight: 600;">{short_count}</span>
-                    <span style="color: {LABEL_COLOR};"> S</span>
-                </div>
-            </div>""",
-        ), unsafe_allow_html=True)
+        lc = int(total * lp / 100) if total > 0 else 0
+        sc = total - lc
+        body = (
+            _big(f"{lp:.2f}%")
+            + f'<div style="margin-top:6px;font-size:12px;">'
+            f'<span style="color:{GREEN};font-weight:600;">{lc}</span>'
+            f'<span style="color:{LABEL_COLOR};"> Long</span>'
+            f'<span style="color:{LABEL_COLOR};margin:0 6px;">|</span>'
+            f'<span style="color:{RED};font-weight:600;">{sc}</span>'
+            f'<span style="color:{LABEL_COLOR};"> Short</span>'
+            f'</div>'
+        )
+        _render(_card_html("Trade Direction %", body))
 
 
 def render_best_worst_row(metrics: dict):
-    """Render Best Trade / Worst Trade row with details."""
+    """Render Best Trade / Worst Trade row."""
     from config.fees import extract_base_symbol
     c1, c2 = st.columns(2)
 
@@ -314,14 +232,16 @@ def render_best_worst_row(metrics: dict):
         entry_p = metrics.get('best_trade_entry', 0)
         exit_p = metrics.get('best_trade_exit', 0)
         dt = metrics.get('best_trade_date', '')
-        detail = f"{side} {qty} /{sym} @ {entry_p}<br>Exited @ {exit_p}<br>{dt}" if sym else ""
-        st.markdown(_card(
-            "Best Trade",
-            f"""<div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                {_val(_format_pnl(pnl), GREEN, "26px")}
-                <div style="color: {LABEL_COLOR}; font-size: 10px; text-align: right; line-height: 1.5;">{detail}</div>
-            </div>""",
-        ), unsafe_allow_html=True)
+        detail = f"{side} {qty} /{sym} @ {entry_p} → {exit_p}" if sym else ""
+        body = (
+            f'<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
+            + _big(_format_pnl(pnl), GREEN, "26px")
+            + f'<div style="color:{LABEL_COLOR};font-size:10px;text-align:right;line-height:1.5;">'
+            f'{detail}</div></div>'
+        )
+        if dt:
+            body += f'<div style="color:{LABEL_COLOR};font-size:10px;margin-top:4px;">{dt}</div>'
+        _render(_card_html("Best Trade", body))
 
     with c2:
         pnl = metrics['worst_trade_pnl']
@@ -331,16 +251,18 @@ def render_best_worst_row(metrics: dict):
         entry_p = metrics.get('worst_trade_entry', 0)
         exit_p = metrics.get('worst_trade_exit', 0)
         dt = metrics.get('worst_trade_date', '')
-        detail = f"{side} {qty} /{sym} @ {entry_p}<br>Exited @ {exit_p}<br>{dt}" if sym else ""
-        st.markdown(_card(
-            "Worst Trade",
-            f"""<div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                {_val(_format_pnl(pnl), RED, "26px")}
-                <div style="color: {LABEL_COLOR}; font-size: 10px; text-align: right; line-height: 1.5;">{detail}</div>
-            </div>""",
-        ), unsafe_allow_html=True)
+        detail = f"{side} {qty} /{sym} @ {entry_p} → {exit_p}" if sym else ""
+        body = (
+            f'<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
+            + _big(_format_pnl(pnl), RED, "26px")
+            + f'<div style="color:{LABEL_COLOR};font-size:10px;text-align:right;line-height:1.5;">'
+            f'{detail}</div></div>'
+        )
+        if dt:
+            body += f'<div style="color:{LABEL_COLOR};font-size:10px;margin-top:4px;">{dt}</div>'
+        _render(_card_html("Worst Trade", body))
 
 
 def render_trade_stats(metrics: dict):
-    """Legacy compat - no longer used in new layout."""
+    """Legacy compat."""
     pass
