@@ -50,13 +50,14 @@ st.markdown("""
 
     /* Tab styling */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 0 !important;
+        gap: 8px !important;
         border-bottom: 1px solid #2A2D3E !important;
         background-color: transparent !important;
     }
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] {
         background-color: transparent !important;
         font-size: 14px !important;
+        padding: 8px 16px !important;
     }
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"],
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] div,
