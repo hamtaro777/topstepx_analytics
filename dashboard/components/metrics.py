@@ -32,7 +32,6 @@ def _card(label: str, value_html: str, subtitle_html: str = "") -> str:
         padding: 16px 20px;
         border-radius: 8px;
         border: 1px solid {CARD_BORDER};
-        height: 100%;
         box-sizing: border-box;
     ">
         <div style="color: {LABEL_COLOR}; font-size: 12px; margin-bottom: 8px; font-weight: 500;">
@@ -52,67 +51,27 @@ def _sub(text: str) -> str:
     return f'<div style="color: {LABEL_COLOR}; font-size: 11px; margin-top: 4px;">{text}</div>'
 
 
-def _right_detail(text: str, color: str = LABEL_COLOR) -> str:
-    return f'<span style="color: {color}; font-size: 13px; font-weight: 500;">{text}</span>'
-
-
-# ── Win Rate Donut (SVG) ────────────────────────────────────────
-def _win_rate_donut_svg(win_pct: float, win_count: int, loss_count: int, size: int = 56) -> str:
-    """Render a small SVG donut chart for win rate."""
-    r = 20
-    c = size // 2
-    circumference = 2 * 3.14159 * r
-    win_arc = circumference * win_pct / 100
-    loss_arc = circumference - win_arc
+# ── CSS Donut (no SVG – Streamlit safe) ─────────────────────────
+def _css_donut(pct: float, color1: str = GREEN, color2: str = RED, size: int = 48) -> str:
+    """Pure CSS donut chart using conic-gradient. Works in Streamlit."""
+    deg = pct / 100 * 360
+    inner = size - 12
     return f"""
-    <svg width="{size}" height="{size}" viewBox="0 0 {size} {size}" style="vertical-align: middle;">
-        <circle cx="{c}" cy="{c}" r="{r}" fill="none" stroke="{RED}" stroke-width="5"
-                stroke-dasharray="{loss_arc} {win_arc}"
-                stroke-dashoffset="{circumference * 0.25}"
-                transform="rotate(-90 {c} {c})"/>
-        <circle cx="{c}" cy="{c}" r="{r}" fill="none" stroke="{GREEN}" stroke-width="5"
-                stroke-dasharray="{win_arc} {loss_arc}"
-                stroke-dashoffset="{circumference * 0.25}"
-                transform="rotate(-90 {c} {c})"/>
-        <text x="{c - 12}" y="{c - 6}" fill="{GREEN}" font-size="8" font-weight="bold">{win_count}</text>
-        <text x="{c + 4}" y="{c + 10}" fill="{RED}" font-size="8" font-weight="bold">{loss_count}</text>
-    </svg>
+    <div style="
+        width: {size}px; height: {size}px; border-radius: 50%;
+        background: conic-gradient({color1} 0deg {deg}deg, {color2} {deg}deg 360deg);
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    ">
+        <div style="width: {inner}px; height: {inner}px; border-radius: 50%; background: {CARD_BG};"></div>
+    </div>
     """
 
 
-# ── Profit Factor Donut (SVG) ───────────────────────────────────
-def _profit_factor_donut_svg(gross_profit: float, gross_loss: float, size: int = 56) -> str:
-    total = gross_profit + gross_loss
-    if total == 0:
-        pct = 50
-    else:
-        pct = gross_profit / total * 100
-    r = 20
-    c = size // 2
-    circumference = 2 * 3.14159 * r
-    profit_arc = circumference * pct / 100
-    loss_arc = circumference - profit_arc
-    return f"""
-    <svg width="{size}" height="{size}" viewBox="0 0 {size} {size}" style="vertical-align: middle;">
-        <circle cx="{c}" cy="{c}" r="{r}" fill="none" stroke="{RED}" stroke-width="5"
-                stroke-dasharray="{loss_arc} {profit_arc}"
-                stroke-dashoffset="{circumference * 0.25}"
-                transform="rotate(-90 {c} {c})"/>
-        <circle cx="{c}" cy="{c}" r="{r}" fill="none" stroke="{GREEN}" stroke-width="5"
-                stroke-dasharray="{profit_arc} {loss_arc}"
-                stroke-dashoffset="{circumference * 0.25}"
-                transform="rotate(-90 {c} {c})"/>
-    </svg>
-    """
-
-
-# ── Avg Win / Avg Loss Bar (SVG) ────────────────────────────────
-def _avg_win_loss_bar_svg(avg_win: float, avg_loss: float) -> str:
+# ── Avg Win / Avg Loss Bar ──────────────────────────────────────
+def _avg_win_loss_bar(avg_win: float, avg_loss: float) -> str:
     total = avg_win + avg_loss
-    if total == 0:
-        win_pct = 50
-    else:
-        win_pct = avg_win / total * 100
+    win_pct = (avg_win / total * 100) if total > 0 else 50
     return f"""
     <div style="margin-top: 6px;">
         <div style="display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #333;">
@@ -124,29 +83,6 @@ def _avg_win_loss_bar_svg(avg_win: float, avg_loss: float) -> str:
             <span style="color: {RED}; font-size: 11px; font-weight: 600;">-${avg_loss:,.2f}</span>
         </div>
     </div>
-    """
-
-
-# ── Direction Donut (SVG) ───────────────────────────────────────
-def _direction_donut_svg(long_pct: float, long_count: int, short_count: int, size: int = 56) -> str:
-    r = 20
-    c = size // 2
-    circumference = 2 * 3.14159 * r
-    long_arc = circumference * long_pct / 100
-    short_arc = circumference - long_arc
-    return f"""
-    <svg width="{size}" height="{size}" viewBox="0 0 {size} {size}" style="vertical-align: middle;">
-        <circle cx="{c}" cy="{c}" r="{r}" fill="none" stroke="{RED}" stroke-width="5"
-                stroke-dasharray="{short_arc} {long_arc}"
-                stroke-dashoffset="{circumference * 0.25}"
-                transform="rotate(-90 {c} {c})"/>
-        <circle cx="{c}" cy="{c}" r="{r}" fill="none" stroke="{GREEN}" stroke-width="5"
-                stroke-dasharray="{long_arc} {short_arc}"
-                stroke-dashoffset="{circumference * 0.25}"
-                transform="rotate(-90 {c} {c})"/>
-        <text x="{c - 14}" y="{c - 6}" fill="{GREEN}" font-size="8" font-weight="bold">{long_count}</text>
-        <text x="{c + 2}" y="{c + 10}" fill="{RED}" font-size="8" font-weight="bold">{short_count}</text>
-    </svg>
     """
 
 
@@ -169,18 +105,26 @@ def render_kpi_row(metrics: dict):
 
     with c2:
         wr = metrics['win_rate']
-        donut = _win_rate_donut_svg(wr, metrics['win_count'], metrics['loss_count'])
+        donut = _css_donut(wr)
+        wc = metrics['win_count']
+        lc = metrics['loss_count']
         st.markdown(_card(
             "Trade Win %",
             f"""<div style="display: flex; align-items: center; gap: 12px;">
                 {_val(f"{wr:.2f}%")}
                 {donut}
+                <div style="font-size: 11px; line-height: 1.6;">
+                    <span style="color: {GREEN}; font-weight: 600;">{wc}</span>
+                    <span style="color: {LABEL_COLOR};"> W</span><br>
+                    <span style="color: {RED}; font-weight: 600;">{lc}</span>
+                    <span style="color: {LABEL_COLOR};"> L</span>
+                </div>
             </div>""",
         ), unsafe_allow_html=True)
 
     with c3:
         rr = metrics['rr_ratio']
-        bar = _avg_win_loss_bar_svg(metrics['avg_win'], metrics['avg_loss'])
+        bar = _avg_win_loss_bar(metrics['avg_win'], metrics['avg_loss'])
         st.markdown(_card(
             "Avg Win / Avg Loss",
             _val(f"{rr:.2f}"),
@@ -206,18 +150,20 @@ def render_kpi_row(metrics: dict):
 
     with c5:
         pf = metrics['profit_factor']
-        donut = _profit_factor_donut_svg(metrics['gross_profit'], metrics['gross_loss'])
         gp = metrics['gross_profit']
         gl = metrics['gross_loss']
+        total_gl = gp + gl
+        pf_pct = (gp / total_gl * 100) if total_gl > 0 else 50
+        donut = _css_donut(pf_pct)
         st.markdown(_card(
             "Profit Factor",
             f"""<div style="display: flex; align-items: center; gap: 12px;">
                 {_val(f"{pf:.2f}")}
                 {donut}
             </div>""",
-            f"""<div style="display: flex; justify-content: space-around; margin-top: 4px;">
-                <span style="color: {GREEN}; font-size: 10px;">${gp:,.2f}</span>
-                <span style="color: {RED}; font-size: 10px;">-${gl:,.2f}</span>
+            f"""<div style="display: flex; justify-content: space-around; margin-top: 6px;">
+                <span style="color: {GREEN}; font-size: 10px; font-weight: 600;">${gp:,.2f}</span>
+                <span style="color: {RED}; font-size: 10px; font-weight: 600;">-${gl:,.2f}</span>
             </div>""",
         ), unsafe_allow_html=True)
 
@@ -339,12 +285,18 @@ def render_avg_trade_row(metrics: dict):
         total = metrics['total_trades']
         long_count = int(total * long_pct / 100) if total > 0 else 0
         short_count = total - long_count
-        donut = _direction_donut_svg(long_pct, long_count, short_count)
+        donut = _css_donut(long_pct)
         st.markdown(_card(
             "Trade Direction %",
             f"""<div style="display: flex; align-items: center; gap: 12px;">
                 {_val(f"{long_pct:.2f}%")}
                 {donut}
+                <div style="font-size: 11px; line-height: 1.6;">
+                    <span style="color: {GREEN}; font-weight: 600;">{long_count}</span>
+                    <span style="color: {LABEL_COLOR};"> L</span><br>
+                    <span style="color: {RED}; font-weight: 600;">{short_count}</span>
+                    <span style="color: {LABEL_COLOR};"> S</span>
+                </div>
             </div>""",
         ), unsafe_allow_html=True)
 
