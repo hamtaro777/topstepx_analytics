@@ -58,6 +58,55 @@ EXCHANGE_FEES = {
 # Default fee for unknown contracts
 DEFAULT_EXCHANGE_FEE = 2.76
 
+# Point values (contract multipliers) - dollar value per 1 point of price movement
+POINT_VALUES = {
+    # CME Equity Index Futures
+    'ES': 50,        # E-mini S&P 500
+    'NQ': 20,        # E-mini Nasdaq 100
+    'RTY': 50,       # E-mini Russell 2000
+    'YM': 5,         # E-mini Dow
+    'MES': 5,        # Micro E-mini S&P 500
+    'MNQ': 2,        # Micro E-mini Nasdaq 100
+    'M2K': 5,        # Micro E-mini Russell 2000
+    'MYM': 0.5,      # Micro E-mini Dow
+
+    # CME FX Futures
+    '6A': 100000,    # Australian Dollar
+    '6B': 62500,     # British Pound
+    '6C': 100000,    # Canadian Dollar
+    '6E': 125000,    # Euro
+    '6J': 12500000,  # Japanese Yen
+    '6S': 125000,    # Swiss Franc
+    '6N': 100000,    # New Zealand Dollar
+    '6M': 500000,    # Mexican Peso
+    'M6A': 10000,    # Micro AUD
+    'M6B': 6250,     # Micro GBP
+    'M6E': 12500,    # Micro EUR
+
+    # COMEX Metals
+    'GC': 100,       # Gold (100 troy oz)
+    'SI': 5000,      # Silver (5000 troy oz)
+    'HG': 25000,     # Copper (25000 lbs)
+    'MGC': 10,       # Micro Gold (10 troy oz)
+    'SIL': 1000,     # Micro Silver (1000 troy oz)
+
+    # NYMEX Energy
+    'CL': 1000,      # Crude Oil (1000 barrels)
+    'NG': 10000,     # Natural Gas (10000 MMBtu)
+    'MCL': 100,      # Micro Crude Oil (100 barrels)
+    'MNG': 1000,     # Micro Natural Gas (1000 MMBtu)
+
+    # CME Agricultural
+    'LE': 400,       # Live Cattle (40000 lbs, cents/lb)
+    'HE': 400,       # Lean Hogs (40000 lbs, cents/lb)
+    'ZC': 50,        # Corn (5000 bushels, cents/bu)
+    'ZS': 50,        # Soybeans (5000 bushels, cents/bu)
+    'ZW': 50,        # Wheat (5000 bushels, cents/bu)
+}
+
+# Default point value for unknown contracts
+DEFAULT_POINT_VALUE = 1
+
 
 def get_fee_per_round_turn(symbol: str) -> float:
     """
@@ -72,6 +121,20 @@ def get_fee_per_round_turn(symbol: str) -> float:
     base_symbol = extract_base_symbol(symbol)
     exchange_fee = EXCHANGE_FEES.get(base_symbol, DEFAULT_EXCHANGE_FEE)
     return exchange_fee + NFA_FEE_PER_RT
+
+
+def get_point_value(symbol: str) -> float:
+    """
+    Get point value (contract multiplier) for a symbol.
+
+    Args:
+        symbol: Contract symbol (e.g., 'CON.F.US.MNQ.H26', 'ESH5')
+
+    Returns:
+        Dollar value per 1 point of price movement per contract
+    """
+    base_symbol = extract_base_symbol(symbol)
+    return POINT_VALUES.get(base_symbol, DEFAULT_POINT_VALUE)
 
 
 def get_fee_per_side(symbol: str) -> float:
