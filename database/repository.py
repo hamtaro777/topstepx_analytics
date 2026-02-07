@@ -33,6 +33,13 @@ class TradeRepository:
                         account_id, symbol, side, entry_time, exit_time,
                         entry_price, exit_price, quantity, pnl, fees, duration_seconds
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(account_id, symbol, entry_time) DO UPDATE SET
+                        exit_time = excluded.exit_time,
+                        exit_price = excluded.exit_price,
+                        quantity = excluded.quantity,
+                        pnl = excluded.pnl,
+                        fees = excluded.fees,
+                        duration_seconds = excluded.duration_seconds
                 """, (
                     trade['account_id'], trade['symbol'], trade['side'],
                     trade['entry_time'], trade.get('exit_time'),
