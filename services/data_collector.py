@@ -3,6 +3,7 @@ Data Collection Service
 """
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
+import json
 import sys
 import os
 
@@ -61,6 +62,9 @@ class DataCollector:
             raw_data = self.client.get_order_history(account_id, start_date, end_date)
             if raw_data:
                 roundtrips = self._convert_orders_to_roundtrips(raw_data, account_id)
+
+        # Save raw data for debugging
+        self._save_raw_data(account_id, account_name, raw_data)
         
         saved_count = 0
         for trade in roundtrips:
@@ -224,6 +228,21 @@ class DataCollector:
                     })
         
         return roundtrips
+
+    def _save_raw_data(self, account_id: int, account_name: str, raw_data: List[Dict]):
+        """Save raw API data to JSON file for debugging"""
+        data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
+        os.makedirs(data_dir, exist_ok=True)
+        filepath = os.path.join(data_dir, f'raw_orders_{account_id}.json')
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump({
+                'account_id': account_id,
+                'account_name': account_name,
+                'exported_at': datetime.now(timezone.utc).isoformat(),
+                'count': len(raw_data),
+                'orders': raw_data
+            }, f, indent=2, ensure_ascii=False, default=str)
+        print(f"  Raw data saved to {filepath} ({len(raw_data)} records)")
 
     def _update_daily_stats(self, account_id: int):
         """Recalculate and update daily statistics"""
