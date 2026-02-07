@@ -78,7 +78,8 @@ class TopstepXClient:
         data = response.json()
         
         if data.get('success'):
-            return data.get('trades', [])
+            trades = data.get('trades', [])
+            return [t for t in trades if not t.get('voided', False)]
         raise Exception(f"Failed to get trades: {data.get('errorMessage')}")
     
     def get_order_history(
