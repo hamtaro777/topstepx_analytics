@@ -40,26 +40,23 @@ st.markdown("""
     .stApp { background-color: #0D1117; }
     section[data-testid="stSidebar"] { background-color: #151920; }
 
-    /* Remove default streamlit padding/gaps */
-    .block-container { padding-top: 1rem; padding-bottom: 1rem; }
-
-    /* Tab container – reset any inherited filters/opacity */
-    .stTabs, .stTabs > div, .stTabs > div > div {
-        filter: none !important;
-        opacity: 1 !important;
+    /* Streamlit header – make transparent so it doesn't hide tab text */
+    header[data-testid="stHeader"] {
+        background-color: transparent !important;
     }
+
+    /* Push content below the fixed header */
+    .block-container { padding-top: 3rem; padding-bottom: 1rem; }
+
+    /* Tab styling */
     .stTabs [data-baseweb="tab-list"] {
         gap: 0 !important;
         border-bottom: 1px solid #2A2D3E !important;
         background-color: transparent !important;
-        position: relative !important;
     }
-    /* Tab buttons – ensure they sit above overlay elements */
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] {
         background-color: transparent !important;
         font-size: 14px !important;
-        position: relative !important;
-        z-index: 2 !important;
     }
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"],
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] div,
@@ -67,7 +64,6 @@ st.markdown("""
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] span {
         color: #8A8D98 !important;
         -webkit-text-fill-color: #8A8D98 !important;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
     }
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"],
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] div,
@@ -79,20 +75,8 @@ st.markdown("""
     .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] {
         border-bottom: 2px solid #00C853 !important;
     }
-    /* Constrain highlight/border elements to bottom line only */
     [data-baseweb="tab-highlight"] {
         background-color: #00C853 !important;
-        height: 3px !important;
-        bottom: 0 !important;
-        top: auto !important;
-        z-index: 1 !important;
-    }
-    [data-baseweb="tab-border"] {
-        background-color: transparent !important;
-        height: 1px !important;
-        bottom: 0 !important;
-        top: auto !important;
-        z-index: 0 !important;
     }
 
     /* Card row spacing */
