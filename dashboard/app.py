@@ -43,35 +43,30 @@ st.markdown("""
     /* Remove default streamlit padding/gaps */
     .block-container { padding-top: 1rem; padding-bottom: 1rem; }
 
-    /* Tab styling – multiple selector strategies for compatibility */
+    /* Tab styling – using data-testid="stTab" from DOM */
     .stTabs [data-baseweb="tab-list"] {
         gap: 0 !important;
         border-bottom: 1px solid #2A2D3E !important;
         background-color: transparent !important;
     }
-    /* Target all elements inside tab buttons */
-    .stTabs [data-baseweb="tab-list"] button,
-    .stTabs [data-baseweb="tab-list"] button *,
-    .stTabs [data-baseweb="tab-list"] [role="tab"],
-    .stTabs [data-baseweb="tab-list"] [role="tab"] * {
+    [data-testid="stTab"] {
         background-color: transparent !important;
         color: #8A8D98 !important;
-        border: none !important;
+        padding: 10px 24px !important;
         font-weight: 500 !important;
         font-size: 14px !important;
     }
-    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"],
-    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] *,
-    .stTabs [data-baseweb="tab-list"] [role="tab"][aria-selected="true"],
-    .stTabs [data-baseweb="tab-list"] [role="tab"][aria-selected="true"] * {
-        color: #FFFFFF !important;
+    [data-testid="stTab"] p,
+    [data-testid="stTab"] span,
+    [data-testid="stTab"] div {
+        color: inherit !important;
+        font-size: inherit !important;
     }
-    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"],
-    .stTabs [data-baseweb="tab-list"] [role="tab"][aria-selected="true"] {
+    [data-testid="stTab"][aria-selected="true"] {
+        color: #FFFFFF !important;
         border-bottom: 2px solid #00C853 !important;
     }
-    /* Also target by Streamlit's own class naming */
-    .stTabs [data-baseweb="tab-highlight"] {
+    [data-baseweb="tab-highlight"] {
         background-color: #00C853 !important;
     }
 
