@@ -43,19 +43,27 @@ st.markdown("""
     /* Remove default streamlit padding/gaps */
     .block-container { padding-top: 1rem; padding-bottom: 1rem; }
 
-    /* Tab styling */
-    .stTabs [data-baseweb="tab-list"] { gap: 0; border-bottom: 1px solid #2A2D3E; }
-    .stTabs [data-baseweb="tab"] {
+    /* Tab styling – force visible text */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0;
+        border-bottom: 1px solid #2A2D3E;
         background-color: transparent;
-        color: #8A8D98;
-        border: none;
-        padding: 10px 24px;
-        font-weight: 500;
     }
-    .stTabs [aria-selected="true"] {
-        background-color: transparent;
-        color: #FFFFFF;
-        border-bottom: 2px solid #00C853;
+    .stTabs [data-baseweb="tab-list"] button {
+        background-color: transparent !important;
+        color: #8A8D98 !important;
+        border: none !important;
+        padding: 10px 24px !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+    }
+    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+        color: #FFFFFF !important;
+        border-bottom: 2px solid #00C853 !important;
+    }
+    .stTabs [data-baseweb="tab-list"] button p {
+        color: inherit !important;
+        font-size: 14px !important;
     }
 
     /* Card row spacing */
