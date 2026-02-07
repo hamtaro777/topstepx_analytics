@@ -101,7 +101,17 @@ class AnalyticsService:
         gross_loss = abs(losses['net_pnl'].sum()) if len(losses) > 0 else 0
         profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else 0
         
-        # Best/Worst Trade
+        # Total lots traded
+        total_lots = int(df['quantity'].sum()) if 'quantity' in df.columns else 0
+
+        # Day Win % (percentage of profitable trading days)
+        daily_pnl_series = df.groupby('date')['net_pnl'].sum()
+        active_days = len(daily_pnl_series)
+        winning_days = (daily_pnl_series > 0).sum()
+        day_win_pct = (winning_days / active_days * 100) if active_days > 0 else 0
+        avg_trades_per_day = total_trades / active_days if active_days > 0 else 0
+
+        # Best/Worst Trade (with details)
         best_trade = df.loc[df['net_pnl'].idxmax()] if len(df) > 0 else None
         worst_trade = df.loc[df['net_pnl'].idxmin()] if len(df) > 0 else None
         
@@ -119,8 +129,7 @@ class AnalyticsService:
         long_pct = (len(long_trades) / total_trades * 100) if total_trades > 0 else 0
         
         # Best Day % of Total Profit
-        daily_pnl = df.groupby('date')['net_pnl'].sum()
-        best_day_pnl = daily_pnl.max() if len(daily_pnl) > 0 else 0
+        best_day_pnl = daily_pnl_series.max() if len(daily_pnl_series) > 0 else 0
         best_day_pct = (best_day_pnl / gross_profit * 100) if gross_profit > 0 else 0
         
         return {
@@ -136,8 +145,24 @@ class AnalyticsService:
             'profit_factor': profit_factor,
             'gross_profit': gross_profit,
             'gross_loss': gross_loss,
+            'total_lots': total_lots,
+            'active_days': active_days,
+            'day_win_pct': day_win_pct,
+            'avg_trades_per_day': avg_trades_per_day,
             'best_trade_pnl': best_trade['net_pnl'] if best_trade is not None else 0,
+            'best_trade_side': best_trade['side'] if best_trade is not None else '',
+            'best_trade_symbol': best_trade.get('symbol', '') if best_trade is not None else '',
+            'best_trade_entry': best_trade.get('entry_price', 0) if best_trade is not None else 0,
+            'best_trade_exit': best_trade.get('exit_price', 0) if best_trade is not None else 0,
+            'best_trade_date': str(best_trade.get('exit_time', ''))[:19] if best_trade is not None else '',
+            'best_trade_qty': int(best_trade.get('quantity', 0)) if best_trade is not None else 0,
             'worst_trade_pnl': worst_trade['net_pnl'] if worst_trade is not None else 0,
+            'worst_trade_side': worst_trade['side'] if worst_trade is not None else '',
+            'worst_trade_symbol': worst_trade.get('symbol', '') if worst_trade is not None else '',
+            'worst_trade_entry': worst_trade.get('entry_price', 0) if worst_trade is not None else 0,
+            'worst_trade_exit': worst_trade.get('exit_price', 0) if worst_trade is not None else 0,
+            'worst_trade_date': str(worst_trade.get('exit_time', ''))[:19] if worst_trade is not None else '',
+            'worst_trade_qty': int(worst_trade.get('quantity', 0)) if worst_trade is not None else 0,
             'avg_duration_seconds': avg_duration,
             'avg_win_duration': avg_win_duration,
             'avg_loss_duration': avg_loss_duration,
@@ -233,7 +258,11 @@ class AnalyticsService:
             'total_pnl': 0, 'total_fees': 0, 'total_trades': 0, 'win_count': 0, 'loss_count': 0,
             'win_rate': 0, 'avg_win': 0, 'avg_loss': 0, 'rr_ratio': 0,
             'profit_factor': 0, 'gross_profit': 0, 'gross_loss': 0,
-            'best_trade_pnl': 0, 'worst_trade_pnl': 0,
+            'total_lots': 0, 'active_days': 0, 'day_win_pct': 0, 'avg_trades_per_day': 0,
+            'best_trade_pnl': 0, 'best_trade_side': '', 'best_trade_symbol': '',
+            'best_trade_entry': 0, 'best_trade_exit': 0, 'best_trade_date': '', 'best_trade_qty': 0,
+            'worst_trade_pnl': 0, 'worst_trade_side': '', 'worst_trade_symbol': '',
+            'worst_trade_entry': 0, 'worst_trade_exit': 0, 'worst_trade_date': '', 'worst_trade_qty': 0,
             'avg_duration_seconds': 0, 'avg_win_duration': 0, 'avg_loss_duration': 0,
             'long_pct': 0, 'short_pct': 0, 'best_day_pct': 0
         }
