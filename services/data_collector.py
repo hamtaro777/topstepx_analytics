@@ -49,18 +49,20 @@ class DataCollector:
         """Sync trades for an account"""
         start_date = datetime.now(timezone.utc) - timedelta(days=days_back)
         end_date = datetime.now(timezone.utc)
-        
-        # Check if LIVE account (TOPX in name)
-        is_live = 'TOPX' in account_name.upper()
-        
-        if is_live:
-            # Use Order/search for LIVE accounts
+
+        # Use Trade/search for all accounts (provides accurate execution
+        # timestamps and platform-calculated P&L). Fall back to Order/search
+        # for LIVE accounts only if Trade/search returns no data.
+        raw_data = self.client.get_trades(account_id, start_date, end_date)
+
+        if raw_data:
+            roundtrips = self._convert_to_roundtrips(raw_data, account_id)
+        elif 'TOPX' in account_name.upper():
+            # Fallback: Order/search for LIVE accounts if Trade/search is empty
             raw_data = self.client.get_order_history(account_id, start_date, end_date)
             roundtrips = self._convert_orders_to_roundtrips(raw_data, account_id)
         else:
-            # Use Trade/search for other accounts
-            raw_data = self.client.get_trades(account_id, start_date, end_date)
-            roundtrips = self._convert_to_roundtrips(raw_data, account_id)
+            roundtrips = []
         
         saved_count = 0
         for trade in roundtrips:
@@ -80,8 +82,8 @@ class DataCollector:
         roundtrips = []
         positions = defaultdict(list)  # Track open positions by contract
         
-        # Sort by timestamp
-        sorted_trades = sorted(raw_trades, key=lambda x: x.get('creationTimestamp', ''))
+        # Sort by execution timestamp
+        sorted_trades = sorted(raw_trades, key=lambda x: x.get('creationTimestamp') or '')
         
         for trade in sorted_trades:
             contract = trade.get('contractId', '')
