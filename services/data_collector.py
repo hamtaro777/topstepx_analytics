@@ -50,19 +50,17 @@ class DataCollector:
         start_date = datetime.now(timezone.utc) - timedelta(days=days_back)
         end_date = datetime.now(timezone.utc)
 
-        # Use Trade/search for all accounts (provides accurate execution
-        # timestamps and platform-calculated P&L). Fall back to Order/search
-        # for LIVE accounts only if Trade/search returns no data.
+        # Try Trade/search first (provides accurate execution timestamps
+        # and platform-calculated P&L). Fall back to Order/search for LIVE
+        # accounts if Trade/search produces no roundtrips (LIVE accounts
+        # may return trades without profitAndLoss populated).
         raw_data = self.client.get_trades(account_id, start_date, end_date)
+        roundtrips = self._convert_to_roundtrips(raw_data, account_id) if raw_data else []
 
-        if raw_data:
-            roundtrips = self._convert_to_roundtrips(raw_data, account_id)
-        elif 'TOPX' in account_name.upper():
-            # Fallback: Order/search for LIVE accounts if Trade/search is empty
+        if not roundtrips and 'TOPX' in account_name.upper():
             raw_data = self.client.get_order_history(account_id, start_date, end_date)
-            roundtrips = self._convert_orders_to_roundtrips(raw_data, account_id)
-        else:
-            roundtrips = []
+            if raw_data:
+                roundtrips = self._convert_orders_to_roundtrips(raw_data, account_id)
         
         saved_count = 0
         for trade in roundtrips:
