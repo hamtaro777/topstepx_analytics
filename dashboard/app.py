@@ -49,30 +49,26 @@ st.markdown("""
         border-bottom: 1px solid #2A2D3E !important;
         background-color: transparent !important;
     }
-    [data-testid="stTab"],
-    [data-testid="stTab"] * {
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] {
         background-color: transparent !important;
-        color: #8A8D98 !important;
-        -webkit-text-fill-color: #8A8D98 !important;
-        font-weight: 500 !important;
         font-size: 14px !important;
     }
-    [data-testid="stTab"] [data-testid="stMarkdownContainer"],
-    [data-testid="stTab"] [data-testid="stMarkdownContainer"] p {
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"],
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] div,
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] p,
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] span {
         color: #8A8D98 !important;
         -webkit-text-fill-color: #8A8D98 !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
     }
-    [data-testid="stTab"][aria-selected="true"],
-    [data-testid="stTab"][aria-selected="true"] * {
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"],
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] div,
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] p,
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] span {
         color: #FFFFFF !important;
         -webkit-text-fill-color: #FFFFFF !important;
     }
-    [data-testid="stTab"][aria-selected="true"] [data-testid="stMarkdownContainer"],
-    [data-testid="stTab"][aria-selected="true"] [data-testid="stMarkdownContainer"] p {
-        color: #FFFFFF !important;
-        -webkit-text-fill-color: #FFFFFF !important;
-    }
-    [data-testid="stTab"][aria-selected="true"] {
+    .stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] {
         border-bottom: 2px solid #00C853 !important;
     }
     [data-baseweb="tab-highlight"] {
