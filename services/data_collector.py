@@ -136,26 +136,32 @@ class DataCollector:
     def _convert_orders_to_roundtrips(self, orders: List[Dict], account_id: int) -> List[Dict]:
         """Convert orders to roundtrip format (for LIVE accounts)"""
         from collections import defaultdict
-        
+
         roundtrips = []
-        # Track positions: {contract: {'side': str, 'entries': [{'price', 'size', 'timestamp'}]}}
-        positions = defaultdict(lambda: {'side': None, 'entries': []})
-        
-        # Sort by execution time: use updateTimestamp (fill time for filled orders),
-        # falling back to creationTimestamp. Use `or` to handle None values properly
-        # (dict.get() only uses default when key is absent, not when value is None)
+        # Track positions by symbolId (contractId can vary for the same instrument,
+        # e.g., "CON.F.US.ENQ.H26" vs "F.US.ENQ"). Each position also stores the
+        # preferred contract name (CON.F. format) for fee/point value lookups.
+        positions = defaultdict(lambda: {'side': None, 'entries': [], 'contract': ''})
+
+        # Sort by fill time (updateTimestamp)
         sorted_orders = sorted(orders, key=lambda x: x.get('updateTimestamp') or x.get('creationTimestamp') or '')
-        
+
         for order in sorted_orders:
             contract = order.get('contractId', '')
+            # Use symbolId for grouping (consistent across all orders for same instrument)
+            symbol_key = order.get('symbolId') or contract
             order_side = order.get('side')  # 0=BUY, 1=SELL
             size = order.get('fillVolume', order.get('size', 0))
             price = order.get('filledPrice', order.get('price', 0))
             timestamp = order.get('updateTimestamp') or order.get('creationTimestamp') or ''
-            
+
             trade_side = 'Long' if order_side == 0 else 'Short'
-            pos = positions[contract]
-            
+            pos = positions[symbol_key]
+
+            # Prefer CON.F. format for symbol storage (needed for fee/point value lookups)
+            if not pos['contract'] or contract.startswith('CON.'):
+                pos['contract'] = contract
+
             # No position or same direction = entry
             if pos['side'] is None or pos['side'] == trade_side:
                 pos['side'] = trade_side
@@ -167,13 +173,13 @@ class DataCollector:
             else:
                 # Opposite direction = exit (closing)
                 remaining_size = size
-                
+
                 while remaining_size > 0 and pos['entries']:
                     entry = pos['entries'][0]
-                    
+
                     # Determine how much to close
                     close_size = min(remaining_size, entry['size'])
-                    
+
                     # Calculate duration
                     try:
                         entry_time = datetime.fromisoformat(entry['timestamp'].replace('Z', '+00:00'))
@@ -181,20 +187,20 @@ class DataCollector:
                         duration = (exit_time - entry_time).total_seconds()
                     except:
                         duration = 0
-                    
+
                     # Calculate P&L with contract point value
-                    point_value = get_point_value(contract)
+                    point_value = get_point_value(pos['contract'])
                     if pos['side'] == 'Long':
                         pnl = (price - entry['price']) * close_size * point_value
                     else:
                         pnl = (entry['price'] - price) * close_size * point_value
-                    
+
                     # Calculate fees for LIVE account
-                    fee = get_fee_per_round_turn(contract) * close_size
+                    fee = get_fee_per_round_turn(pos['contract']) * close_size
 
                     roundtrips.append({
                         'account_id': account_id,
-                        'symbol': contract,
+                        'symbol': pos['contract'],
                         'side': pos['side'],
                         'entry_time': entry['timestamp'],
                         'exit_time': timestamp,
@@ -205,19 +211,19 @@ class DataCollector:
                         'fees': round(fee, 2),
                         'duration_seconds': int(duration)
                     })
-                    
+
                     # Update remaining sizes
                     remaining_size -= close_size
                     entry['size'] -= close_size
-                    
+
                     # Remove entry if fully closed
                     if entry['size'] <= 0:
                         pos['entries'].pop(0)
-                
+
                 # If position fully closed, reset
                 if not pos['entries']:
                     pos['side'] = None
-                
+
                 # If there's remaining size, it's a new position in opposite direction
                 if remaining_size > 0:
                     pos['side'] = trade_side
@@ -226,7 +232,7 @@ class DataCollector:
                         'size': remaining_size,
                         'timestamp': timestamp
                     })
-        
+
         return roundtrips
 
     def _save_raw_data(self, account_id: int, account_name: str, raw_data: List[Dict]):
