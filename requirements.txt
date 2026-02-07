@@ -1,0 +1,24 @@
+# TopstepX Analytics Dashboard
+# Python 3.10+
+
+# Web Framework
+streamlit>=1.28.0
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Visualization
+plotly>=5.18.0
+
+# HTTP Client
+requests>=2.31.0
+
+# Environment & Configuration
+python-dotenv>=1.0.0
+
+# Data Validation
+pydantic>=2.0.0
+
+# Date handling
+python-dateutil>=2.8.2
