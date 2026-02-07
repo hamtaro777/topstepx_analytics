@@ -57,8 +57,18 @@ st.markdown("""
         font-weight: 500 !important;
         font-size: 14px !important;
     }
+    [data-testid="stTab"] [data-testid="stMarkdownContainer"],
+    [data-testid="stTab"] [data-testid="stMarkdownContainer"] p {
+        color: #8A8D98 !important;
+        -webkit-text-fill-color: #8A8D98 !important;
+    }
     [data-testid="stTab"][aria-selected="true"],
     [data-testid="stTab"][aria-selected="true"] * {
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+    }
+    [data-testid="stTab"][aria-selected="true"] [data-testid="stMarkdownContainer"],
+    [data-testid="stTab"][aria-selected="true"] [data-testid="stMarkdownContainer"] p {
         color: #FFFFFF !important;
         -webkit-text-fill-color: #FFFFFF !important;
     }
