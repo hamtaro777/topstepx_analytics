@@ -24,11 +24,11 @@ def _format_pnl(value: float) -> str:
     return f"-${abs(value):,.2f}"
 
 
-def _card_html(label: str, body: str) -> str:
+def _card_html(label: str, body: str, min_h: int = 120) -> str:
     """Minimal card wrapper. Keep body HTML as simple as possible."""
     return (
         f'<div style="background:{CARD_BG};padding:16px 20px;border-radius:8px;'
-        f'border:1px solid {CARD_BORDER};box-sizing:border-box;height:100%;">'
+        f'border:1px solid {CARD_BORDER};box-sizing:border-box;min-height:{min_h}px;">'
         f'<div style="color:{LABEL_COLOR};font-size:12px;margin-bottom:8px;font-weight:500;">{label}</div>'
         f'{body}'
         f'</div>'
