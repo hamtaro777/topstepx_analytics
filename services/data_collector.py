@@ -25,13 +25,9 @@ class DataCollector:
         init_database(db_path)
     
     def authenticate(self) -> bool:
-        """Authenticate with API"""
-        try:
-            self.client.authenticate()
-            return True
-        except Exception as e:
-            print(f"Authentication failed: {e}")
-            return False
+        """Authenticate with API. Raises on failure so callers can show the error message."""
+        self.client.authenticate()
+        return True
     
     def sync_accounts(self) -> List[Dict]:
         """Sync account information"""
