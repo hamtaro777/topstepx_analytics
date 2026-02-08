@@ -24,22 +24,24 @@ def main():
     
     if args.sync:
         print("Syncing data from TopstepX API...")
-        collector = DataCollector()
-        if collector.authenticate():
-            accounts = collector.sync_accounts()
-            
-            # Filter to only LIVE accounts (TOPX in name)
-            live_accounts = [a for a in accounts if 'TOPX' in a.get('name', '').upper()]
-            print(f"Found {len(live_accounts)} LIVE accounts (out of {len(accounts)} total)")
-            
-            for acc in live_accounts:
-                count = collector.sync_trades(acc['id'], acc.get('name', ''), days_back=args.days)
-                print(f"  {acc['name']}: {count} new trades")
- 
-            print("Sync complete!")
-        else:
-            print("Authentication failed. Check your credentials.")
+        try:
+            collector = DataCollector()
+            collector.authenticate()
+        except Exception as e:
+            print(f"Authentication failed: {e}")
             sys.exit(1)
+
+        accounts = collector.sync_accounts()
+
+        # Filter to only LIVE accounts (TOPX in name)
+        live_accounts = [a for a in accounts if 'TOPX' in a.get('name', '').upper()]
+        print(f"Found {len(live_accounts)} LIVE accounts (out of {len(accounts)} total)")
+
+        for acc in live_accounts:
+            count = collector.sync_trades(acc['id'], acc.get('name', ''), days_back=args.days)
+            print(f"  {acc['name']}: {count} new trades")
+
+        print("Sync complete!")
     
     if args.dashboard or not args.sync:
         print("Launching dashboard...")

@@ -189,7 +189,7 @@ def render_login_page():
                 else:
                     st.error("認証に失敗しました。Username と API Key を確認してください。")
             except Exception as e:
-                st.error(f"接続エラー: {e}")
+                st.error(f"認証エラー: {e}")
         return False
 
     # Auto-login if saved credentials exist and user hasn't interacted yet
