@@ -421,29 +421,22 @@ def main():
     init_session_state()
     init_database()
 
-    # Show login page if not authenticated and no data exists
-    repo_check = TradeRepository()
-    has_local_data = bool(repo_check.get_accounts())
-
-    if not st.session_state.authenticated and not has_local_data:
-        render_login_page()
-        return
-
-    # If we have local data but not authenticated, allow browsing
-    # but still offer login in sidebar for syncing
-    if not st.session_state.authenticated and has_local_data:
-        # Try auto-login with saved credentials
+    # Try auto-login with saved credentials
+    if not st.session_state.authenticated:
         saved = _load_saved_credentials()
         if saved["username"] and saved["api_key"]:
             st.session_state.credentials = saved
             st.session_state.authenticated = True
 
+    # Show login page if not authenticated
+    if not st.session_state.authenticated:
+        render_login_page()
+        return
+
     accounts = render_sidebar()
 
     if not accounts:
-        st.warning("アカウントが見つかりません。ログインしてデータを同期してください。")
-        if not st.session_state.authenticated:
-            render_login_page()
+        st.warning("アカウントが見つかりません。サイドバーの「Sync Data from API」でデータを同期してください。")
         return
 
     # Get data
