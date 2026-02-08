@@ -17,9 +17,12 @@ class TopstepXClient:
         self.api_key = api_key or TOPSTEPX_API_KEY
         self.session_token: Optional[str] = None
         self.session = requests.Session()
-        
+
         if not self.username or not self.api_key:
-            raise ValueError("Username and API key are required")
+            raise ValueError(
+                "Username and API key are required. "
+                "Enter them in the dashboard login screen or set TOPSTEPX_USERNAME / TOPSTEPX_API_KEY environment variables."
+            )
     
     def authenticate(self) -> Dict[str, Any]:
         """Authenticate and get session token"""
