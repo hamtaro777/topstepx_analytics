@@ -233,6 +233,7 @@ def render_sidebar():
     # Logout button
     st.sidebar.markdown("---")
     if st.sidebar.button("Logout"):
+        _clear_saved_credentials()
         st.session_state.authenticated = False
         st.session_state.credentials = {"username": "", "api_key": ""}
         st.session_state.collector = None
