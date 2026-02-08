@@ -4,7 +4,9 @@ Streamlit Application
 """
 import streamlit as st
 import pandas as pd
+import json
 from datetime import datetime, date, timedelta
+from pathlib import Path
 import sys
 import os
 
@@ -24,6 +26,39 @@ from dashboard.components.charts import (
     create_duration_chart, create_win_rate_by_duration,
 )
 from dashboard.components.calendar_view import render_monthly_calendar, render_weekly_summary
+
+# Credentials file path (stored locally alongside the database)
+_BASE_DIR = Path(__file__).parent.parent
+_CREDENTIALS_PATH = _BASE_DIR / "data" / "credentials.json"
+
+
+def _load_saved_credentials() -> dict:
+    """Load saved credentials from local file."""
+    if _CREDENTIALS_PATH.exists():
+        try:
+            data = json.loads(_CREDENTIALS_PATH.read_text(encoding="utf-8"))
+            return {
+                "username": data.get("username", ""),
+                "api_key": data.get("api_key", ""),
+            }
+        except (json.JSONDecodeError, OSError):
+            pass
+    return {"username": "", "api_key": ""}
+
+
+def _save_credentials(username: str, api_key: str) -> None:
+    """Save credentials to local file."""
+    _CREDENTIALS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _CREDENTIALS_PATH.write_text(
+        json.dumps({"username": username, "api_key": api_key}, indent=2),
+        encoding="utf-8",
+    )
+
+
+def _clear_saved_credentials() -> None:
+    """Delete saved credentials file."""
+    if _CREDENTIALS_PATH.exists():
+        _CREDENTIALS_PATH.unlink()
 
 # Page config
 st.set_page_config(
@@ -103,10 +138,62 @@ def init_session_state():
     """Initialize session state variables"""
     if 'authenticated' not in st.session_state:
         st.session_state.authenticated = False
+    if 'credentials' not in st.session_state:
+        st.session_state.credentials = {"username": "", "api_key": ""}
     if 'collector' not in st.session_state:
         st.session_state.collector = None
     if 'accounts' not in st.session_state:
         st.session_state.accounts = []
+
+
+def render_login_page():
+    """Render login page for entering API credentials."""
+    st.markdown("## TopstepX Analytics")
+    st.markdown("TopstepX の認証情報を入力してください。")
+
+    saved = _load_saved_credentials()
+
+    with st.form("login_form"):
+        username = st.text_input("Username", value=saved["username"])
+        api_key = st.text_input("API Key", value=saved["api_key"], type="password")
+        save_creds = st.checkbox("認証情報をローカルに保存する（次回から自動入力）", value=bool(saved["username"]))
+        submitted = st.form_submit_button("ログイン & データ同期", type="primary")
+
+    if submitted:
+        if not username or not api_key:
+            st.error("Username と API Key の両方を入力してください。")
+            return False
+
+        with st.spinner("認証中..."):
+            try:
+                collector = DataCollector(username=username, api_key=api_key)
+                if collector.authenticate():
+                    st.session_state.authenticated = True
+                    st.session_state.credentials = {"username": username, "api_key": api_key}
+                    st.session_state.collector = collector
+
+                    if save_creds:
+                        _save_credentials(username, api_key)
+                    else:
+                        _clear_saved_credentials()
+
+                    # Sync accounts & trades on login
+                    accounts = collector.sync_accounts()
+                    live_accounts = [a for a in accounts if 'TOPX' in a.get('name', '').upper()]
+                    for acc in live_accounts:
+                        collector.sync_trades(acc['id'], acc.get('name', ''))
+                    st.session_state.accounts = live_accounts
+
+                    st.success(f"ログイン成功！ {len(live_accounts)} 件の LIVE アカウントを同期しました。")
+                    st.rerun()
+                else:
+                    st.error("認証に失敗しました。Username と API Key を確認してください。")
+            except Exception as e:
+                st.error(f"接続エラー: {e}")
+        return False
+
+    # Auto-login if saved credentials exist and user hasn't interacted yet
+    return False
 
 
 def render_sidebar():
@@ -143,20 +230,37 @@ def render_sidebar():
     if st.sidebar.button("Sync Data from API", type="primary"):
         sync_data()
 
+    # Logout button
+    st.sidebar.markdown("---")
+    if st.sidebar.button("Logout"):
+        st.session_state.authenticated = False
+        st.session_state.credentials = {"username": "", "api_key": ""}
+        st.session_state.collector = None
+        st.rerun()
+
     return accounts
 
 
 def sync_data():
-    """Sync data from TopstepX API"""
+    """Sync data from TopstepX API using session credentials"""
+    creds = st.session_state.get("credentials", {})
+    username = creds.get("username", "")
+    api_key = creds.get("api_key", "")
+
+    if not username or not api_key:
+        st.sidebar.error("認証情報がありません。再ログインしてください。")
+        return
+
     with st.spinner("Syncing data..."):
         try:
-            collector = DataCollector()
+            collector = DataCollector(username=username, api_key=api_key)
             if collector.authenticate():
                 accounts = collector.sync_accounts()
-                st.sidebar.success(f"Synced {len(accounts)} accounts")
+                live_accounts = [a for a in accounts if 'TOPX' in a.get('name', '').upper()]
+                st.sidebar.success(f"Synced {len(live_accounts)} accounts")
 
-                for acc in accounts:
-                    count = collector.sync_trades(acc['id'])
+                for acc in live_accounts:
+                    count = collector.sync_trades(acc['id'], acc.get('name', ''))
                     st.sidebar.info(f"{acc['name']}: {count} new trades")
 
                 st.rerun()
@@ -317,17 +421,29 @@ def main():
     init_session_state()
     init_database()
 
+    # Show login page if not authenticated and no data exists
+    repo_check = TradeRepository()
+    has_local_data = bool(repo_check.get_accounts())
+
+    if not st.session_state.authenticated and not has_local_data:
+        render_login_page()
+        return
+
+    # If we have local data but not authenticated, allow browsing
+    # but still offer login in sidebar for syncing
+    if not st.session_state.authenticated and has_local_data:
+        # Try auto-login with saved credentials
+        saved = _load_saved_credentials()
+        if saved["username"] and saved["api_key"]:
+            st.session_state.credentials = saved
+            st.session_state.authenticated = True
+
     accounts = render_sidebar()
 
     if not accounts:
-        st.warning("No accounts found. Click 'Sync Data from API' to fetch your trading data.")
-        st.markdown("""
-        ### Setup Instructions
-        1. Create a `.env` file with your credentials:
-        TOPSTEPX_USERNAME=your_username
-        TOPSTEPX_API_KEY=your_api_key
-        2. Click 'Sync Data from API' in the sidebar
-        """)
+        st.warning("アカウントが見つかりません。ログインしてデータを同期してください。")
+        if not st.session_state.authenticated:
+            render_login_page()
         return
 
     # Get data

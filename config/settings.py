@@ -3,10 +3,12 @@ Configuration settings for TopstepX Analytics
 """
 import os
 from pathlib import Path
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # python-dotenv is optional when credentials are entered via UI
 
 # Base paths
 BASE_DIR = Path(__file__).parent.parent
