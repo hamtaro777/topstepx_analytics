@@ -69,7 +69,7 @@ def render_kpi_row(metrics: dict):
         body = (
             f'<div style="display:flex;align-items:baseline;gap:12px;">'
             f'<div style="color:{VALUE_COLOR};font-size:28px;font-weight:700;line-height:1.2;white-space:nowrap;">{wr:.2f}%</div>'
-            f'<div style="font-size:14px;white-space:nowrap;">'
+            f'<div style="font-size:20px;white-space:nowrap;">'
             f'<span style="color:{GREEN};font-weight:600;">{wc}</span>'
             f'<span style="color:{LABEL_COLOR};"> W</span>'
             f'<span style="color:{LABEL_COLOR};margin:0 6px;">|</span>'
