@@ -1,5 +1,26 @@
+# Credentials & secrets
 .env
+credentials.json
+
+# Data (generated at runtime)
+data/
+
+# Python
 __pycache__/
 *.pyc
-data/
-credentials.json
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# IDE / editor
+.claude/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
