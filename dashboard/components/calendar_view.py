@@ -93,8 +93,8 @@ def render_monthly_calendar(year: int, month: int, calendar_data: Dict[int, Dict
                         box-sizing: border-box;
                     ">
                         {day_label}
-                        <div style="color: {color}; font-weight: 700; font-size: 13px;">{_format_pnl(pnl)}</div>
-                        <div style="font-size: 9px; color: {LABEL_COLOR};">{trades} trades</div>
+                        <div style="color: {color}; font-weight: 700; font-size: 17px;">{_format_pnl(pnl)}</div>
+                        <div style="font-size: 12px; color: {LABEL_COLOR};">{trades} trades</div>
                     </div>
                     """, unsafe_allow_html=True)
                 else:
