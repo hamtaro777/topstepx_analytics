@@ -5,6 +5,8 @@ Last updated: February 2025
 
 All fees are per ROUND TURN (往復)
 """
+import json
+from pathlib import Path
 
 # Regulatory fee (NFA) - applies to all contracts
 NFA_FEE_PER_RT = 0.04
@@ -111,14 +113,18 @@ DEFAULT_POINT_VALUE = 1
 def get_fee_per_round_turn(symbol: str) -> float:
     """
     Get total fee per round turn for a symbol.
+    Returns user custom fee if set, otherwise default (exchange + NFA).
 
     Args:
         symbol: Contract symbol (e.g., 'MESZ4', 'MNQ', 'ESH5')
 
     Returns:
-        Total fee (exchange + NFA) per round turn
+        Total fee per round turn
     """
     base_symbol = extract_base_symbol(symbol)
+    custom = get_custom_fee(base_symbol)
+    if custom is not None:
+        return custom
     exchange_fee = EXCHANGE_FEES.get(base_symbol, DEFAULT_EXCHANGE_FEE)
     return exchange_fee + NFA_FEE_PER_RT
 
@@ -198,3 +204,74 @@ def extract_base_symbol(symbol: str) -> str:
         return symbol[:3]
 
     return symbol[:2] if len(symbol) >= 2 else symbol
+
+
+# ── User custom fee overrides ──────────────────────────────────
+
+_CUSTOM_FEES_PATH = Path(__file__).parent.parent / "data" / "custom_fees.json"
+
+# Runtime cache (loaded once, updated by set_custom_fee)
+_custom_fees: dict | None = None
+
+
+def _load_custom_fees() -> dict:
+    """Load user custom fees from local JSON file."""
+    global _custom_fees
+    if _custom_fees is not None:
+        return _custom_fees
+    if _CUSTOM_FEES_PATH.exists():
+        try:
+            _custom_fees = json.loads(_CUSTOM_FEES_PATH.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            _custom_fees = {}
+    else:
+        _custom_fees = {}
+    return _custom_fees
+
+
+def _save_custom_fees(data: dict) -> None:
+    """Save custom fees to local JSON file."""
+    global _custom_fees
+    _custom_fees = data
+    _CUSTOM_FEES_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _CUSTOM_FEES_PATH.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+
+def get_custom_fee(base_symbol: str) -> float | None:
+    """Get user-defined fee override for a symbol (per round turn, including NFA)."""
+    return _load_custom_fees().get(base_symbol)
+
+
+def set_custom_fee(base_symbol: str, fee_per_rt: float) -> None:
+    """Set a custom fee override for a symbol (per round turn, including NFA)."""
+    data = _load_custom_fees()
+    data[base_symbol] = fee_per_rt
+    _save_custom_fees(data)
+
+
+def remove_custom_fee(base_symbol: str) -> None:
+    """Remove custom fee override and revert to default."""
+    data = _load_custom_fees()
+    data.pop(base_symbol, None)
+    _save_custom_fees(data)
+
+
+def get_all_fee_settings() -> dict:
+    """Return all fee settings (defaults merged with custom overrides).
+
+    Returns dict of {symbol: {"default": float, "custom": float|None, "active": float}}
+    """
+    custom = _load_custom_fees()
+    result = {}
+    for sym, default_fee in EXCHANGE_FEES.items():
+        default_total = default_fee + NFA_FEE_PER_RT
+        cust = custom.get(sym)
+        result[sym] = {
+            "default": default_total,
+            "custom": cust,
+            "active": cust if cust is not None else default_total,
+        }
+    return result

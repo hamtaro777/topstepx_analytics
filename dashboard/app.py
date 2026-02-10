@@ -17,6 +17,7 @@ from database.schema import init_database
 from database.repository import TradeRepository
 from services.analytics import AnalyticsService
 from services.data_collector import DataCollector
+from config.fees import get_all_fee_settings, set_custom_fee, remove_custom_fee
 from dashboard.components.metrics import (
     render_kpi_row, render_day_analysis, render_stats_row,
     render_duration_row, render_avg_trade_row, render_best_worst_row,
@@ -196,6 +197,39 @@ def render_login_page():
     return False
 
 
+def _render_fee_settings():
+    """Render fee customization UI inside a sidebar expander."""
+    fee_settings = get_all_fee_settings()
+
+    st.caption("手数料を変更すると再同期時に反映されます。")
+
+    for sym in sorted(fee_settings.keys()):
+        info = fee_settings[sym]
+        col_sym, col_fee, col_btn = st.columns([2, 3, 1])
+        with col_sym:
+            st.text(sym)
+        with col_fee:
+            new_val = st.number_input(
+                f"fee_{sym}",
+                value=info["active"],
+                min_value=0.0,
+                step=0.01,
+                format="%.2f",
+                key=f"fee_input_{sym}",
+                label_visibility="collapsed",
+            )
+        with col_btn:
+            if info["custom"] is not None:
+                if st.button("↩", key=f"fee_reset_{sym}", help="デフォルトに戻す"):
+                    remove_custom_fee(sym)
+                    st.rerun()
+
+        # Save if changed
+        if abs(new_val - info["active"]) > 0.001:
+            set_custom_fee(sym, round(new_val, 2))
+            st.rerun()
+
+
 def render_sidebar():
     """Render sidebar with controls"""
     st.sidebar.title("TopstepX Analytics")
@@ -229,6 +263,11 @@ def render_sidebar():
     st.sidebar.markdown("---")
     if st.sidebar.button("Sync Data from API", type="primary"):
         sync_data()
+
+    # Fee settings
+    st.sidebar.markdown("---")
+    with st.sidebar.expander("Fee Settings"):
+        _render_fee_settings()
 
     # Logout button
     st.sidebar.markdown("---")
