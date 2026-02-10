@@ -67,14 +67,15 @@ def render_kpi_row(metrics: dict):
         wc = metrics['win_count']
         lc = metrics['loss_count']
         body = (
-            _big(f"{wr:.2f}%")
-            + f'<div style="margin-top:6px;font-size:12px;">'
+            f'<div style="display:flex;align-items:baseline;gap:12px;">'
+            f'<div style="color:{VALUE_COLOR};font-size:28px;font-weight:700;line-height:1.2;white-space:nowrap;">{wr:.2f}%</div>'
+            f'<div style="font-size:14px;white-space:nowrap;">'
             f'<span style="color:{GREEN};font-weight:600;">{wc}</span>'
             f'<span style="color:{LABEL_COLOR};"> W</span>'
             f'<span style="color:{LABEL_COLOR};margin:0 6px;">|</span>'
             f'<span style="color:{RED};font-weight:600;">{lc}</span>'
             f'<span style="color:{LABEL_COLOR};"> L</span>'
-            f'</div>'
+            f'</div></div>'
         )
         _render(_card_html("Trade Win %", body))
 
@@ -93,8 +94,8 @@ def render_kpi_row(metrics: dict):
             f'<div style="width:{100-win_pct}%;background:{RED};"></div>'
             f'</div>'
             f'<div style="display:flex;justify-content:space-between;margin-top:6px;">'
-            f'<span style="color:{GREEN};font-size:14px;font-weight:600;">${avg_w:,.2f}</span>'
-            f'<span style="color:{RED};font-size:14px;font-weight:600;">-${avg_l:,.2f}</span>'
+            f'<span style="color:{GREEN};font-size:20px;font-weight:600;">${avg_w:,.2f}</span>'
+            f'<span style="color:{RED};font-size:20px;font-weight:600;">-${avg_l:,.2f}</span>'
             f'</div></div></div>'
         )
         _render(_card_html("Avg Win / Avg Loss", body))
@@ -115,12 +116,13 @@ def render_kpi_row(metrics: dict):
         gp = metrics['gross_profit']
         gl = metrics['gross_loss']
         body = (
-            _big(f"{pf:.2f}")
-            + f'<div style="margin-top:6px;font-size:11px;">'
+            f'<div style="display:flex;align-items:baseline;gap:12px;">'
+            f'<div style="color:{VALUE_COLOR};font-size:28px;font-weight:700;line-height:1.2;white-space:nowrap;">{pf:.2f}</div>'
+            f'<div style="font-size:14px;white-space:nowrap;">'
             f'<span style="color:{GREEN};font-weight:600;">${gp:,.2f}</span>'
             f'<span style="color:{LABEL_COLOR};margin:0 6px;">|</span>'
             f'<span style="color:{RED};font-weight:600;">-${gl:,.2f}</span>'
-            f'</div>'
+            f'</div></div>'
         )
         _render(_card_html("Profit Factor", body))
 
