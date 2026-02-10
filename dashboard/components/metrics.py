@@ -93,8 +93,8 @@ def render_kpi_row(metrics: dict):
             f'<div style="width:{100-win_pct}%;background:{RED};"></div>'
             f'</div>'
             f'<div style="display:flex;justify-content:space-between;margin-top:6px;">'
-            f'<span style="color:{GREEN};font-size:14px;font-weight:600;">${avg_w:,.2f}</span>'
-            f'<span style="color:{RED};font-size:14px;font-weight:600;">-${avg_l:,.2f}</span>'
+            f'<span style="color:{GREEN};font-size:20px;font-weight:600;">${avg_w:,.2f}</span>'
+            f'<span style="color:{RED};font-size:20px;font-weight:600;">-${avg_l:,.2f}</span>'
             f'</div></div></div>'
         )
         _render(_card_html("Avg Win / Avg Loss", body))
