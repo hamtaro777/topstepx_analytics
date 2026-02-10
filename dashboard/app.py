@@ -451,7 +451,7 @@ def render_trades_page(trades: list):
     # Summary with net P/L
     total_fees = filtered['fees'].sum()
     net_pnl = filtered['net_pnl'].sum()
-    st.markdown(f"**Total: {len(filtered)} trades | Gross P/L: ${filtered['pnl'].sum():,.2f} | Fees: ${total_fees:,.2f} | Net P/L: ${net_pnl:,.2f}**")
+    st.markdown(f"**Total: {len(filtered)} trades | Gross P/L: \\${filtered['pnl'].sum():,.2f} | Fees: \\${total_fees:,.2f} | Net P/L: \\${net_pnl:,.2f}**")
 
 
 # ═══════════════════════════════════════════════════════════════
