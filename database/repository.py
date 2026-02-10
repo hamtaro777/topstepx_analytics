@@ -33,8 +33,7 @@ class TradeRepository:
                         account_id, symbol, side, entry_time, exit_time,
                         entry_price, exit_price, quantity, pnl, fees, duration_seconds
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(account_id, symbol, entry_time) DO UPDATE SET
-                        exit_time = excluded.exit_time,
+                    ON CONFLICT(account_id, symbol, entry_time, exit_time) DO UPDATE SET
                         exit_price = excluded.exit_price,
                         quantity = excluded.quantity,
                         pnl = excluded.pnl,
