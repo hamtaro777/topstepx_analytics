@@ -441,7 +441,7 @@ def render_trades_page(trades: list):
         filtered = filtered[filtered['net_pnl'] < 0]
 
     # Display table with fees and net_pnl
-    display_cols = ['entry_time', 'symbol', 'side', 'quantity', 'entry_price', 'exit_price', 'pnl', 'fees', 'net_pnl', 'duration_seconds']
+    display_cols = ['entry_time', 'exit_time', 'symbol', 'side', 'quantity', 'entry_price', 'exit_price', 'pnl', 'fees', 'net_pnl', 'duration_seconds']
     st.dataframe(
         filtered[display_cols],
         use_container_width=True,
