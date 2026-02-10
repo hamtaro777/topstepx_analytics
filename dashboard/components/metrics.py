@@ -85,16 +85,17 @@ def render_kpi_row(metrics: dict):
         total = avg_w + avg_l
         win_pct = (avg_w / total * 100) if total > 0 else 50
         body = (
-            _big(f"{rr:.2f}")
-            + f'<div style="margin-top:6px;">'
+            f'<div style="display:flex;align-items:center;gap:16px;">'
+            f'<div style="color:{VALUE_COLOR};font-size:28px;font-weight:700;line-height:1.2;white-space:nowrap;">{rr:.2f}</div>'
+            f'<div style="flex:1;min-width:0;">'
             f'<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:#333;">'
             f'<div style="width:{win_pct}%;background:{GREEN};"></div>'
             f'<div style="width:{100-win_pct}%;background:{RED};"></div>'
             f'</div>'
-            f'<div style="display:flex;justify-content:space-between;margin-top:4px;">'
-            f'<span style="color:{GREEN};font-size:11px;font-weight:600;">${avg_w:,.2f}</span>'
-            f'<span style="color:{RED};font-size:11px;font-weight:600;">-${avg_l:,.2f}</span>'
-            f'</div></div>'
+            f'<div style="display:flex;justify-content:space-between;margin-top:6px;">'
+            f'<span style="color:{GREEN};font-size:14px;font-weight:600;">${avg_w:,.2f}</span>'
+            f'<span style="color:{RED};font-size:14px;font-weight:600;">-${avg_l:,.2f}</span>'
+            f'</div></div></div>'
         )
         _render(_card_html("Avg Win / Avg Loss", body))
 
