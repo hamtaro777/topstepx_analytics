@@ -116,12 +116,13 @@ def render_kpi_row(metrics: dict):
         gp = metrics['gross_profit']
         gl = metrics['gross_loss']
         body = (
-            _big(f"{pf:.2f}")
-            + f'<div style="margin-top:6px;font-size:11px;">'
+            f'<div style="display:flex;align-items:baseline;gap:12px;">'
+            f'<div style="color:{VALUE_COLOR};font-size:28px;font-weight:700;line-height:1.2;white-space:nowrap;">{pf:.2f}</div>'
+            f'<div style="font-size:14px;white-space:nowrap;">'
             f'<span style="color:{GREEN};font-weight:600;">${gp:,.2f}</span>'
             f'<span style="color:{LABEL_COLOR};margin:0 6px;">|</span>'
             f'<span style="color:{RED};font-weight:600;">-${gl:,.2f}</span>'
-            f'</div>'
+            f'</div></div>'
         )
         _render(_card_html("Profit Factor", body))
 
